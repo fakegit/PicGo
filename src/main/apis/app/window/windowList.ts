@@ -1,7 +1,5 @@
 import {
   IWindowList,
-  DELETE_WINDOW_EVENT,
-  CREATE_WINDOW_EVENT,
   SETTING_WINDOW_URL,
   TRAY_WINDOW_URL,
   MINI_WINDOW_URL,
@@ -10,6 +8,7 @@ import {
 import { IWindowListItem } from '#/types/electron'
 import bus from '@core/bus'
 import db from '#/datastore'
+import { TOGGLE_SHORTKEY_MODIFIED_MODE } from '#/events/constants'
 import { getWindowId } from '@core/bus/apis'
 import { BrowserWindow, app } from 'electron'
 import { CREATE_APP_MENU } from '@core/bus/constants'
@@ -37,12 +36,7 @@ windowList.set(IWindowList.TRAY_WINDOW, {
     }
   },
   callback (window) {
-    const id = window.id
     window.loadURL(TRAY_WINDOW_URL)
-    window.on('closed', () => {
-      bus.emit(DELETE_WINDOW_EVENT, id)
-    })
-
     window.on('blur', () => {
       window.hide()
     })
@@ -81,12 +75,10 @@ windowList.set(IWindowList.SETTING_WINDOW, {
     }
     return options
   },
-  callback (window) {
-    const id = window.id
+  callback (window, windowManager) {
     window.loadURL(SETTING_WINDOW_URL)
     window.on('closed', () => {
-      bus.emit('toggleShortKeyModifiedMode', false)
-      bus.emit(DELETE_WINDOW_EVENT, id)
+      bus.emit(TOGGLE_SHORTKEY_MODIFIED_MODE, false)
       if (process.platform === 'linux') {
         process.nextTick(() => {
           app.quit()
@@ -94,7 +86,7 @@ windowList.set(IWindowList.SETTING_WINDOW, {
       }
     })
     bus.emit(CREATE_APP_MENU)
-    bus.emit(CREATE_WINDOW_EVENT, IWindowList.MINI_WINDOW)
+    windowManager.create(IWindowList.MINI_WINDOW)
   }
 })
 
@@ -124,11 +116,11 @@ windowList.set(IWindowList.MINI_WINDOW, {
     }
     return obj
   },
-  callback (window) {
+  callback (window, windowManager) {
     const id = window.id
     window.loadURL(MINI_WINDOW_URL)
     window.on('closed', () => {
-      bus.emit(DELETE_WINDOW_EVENT, id)
+      windowManager.deleteById(id)
     })
   }
 })

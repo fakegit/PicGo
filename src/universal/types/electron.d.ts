@@ -9,12 +9,13 @@ declare interface IWindowListItem {
   isValid: boolean
   multiple: boolean
   options: () => IBrowserWindowOptions,
-  callback: (window: BrowserWindow) => void
+  callback: (window: BrowserWindow, windowManager: IWindowManager) => void
 }
 
 declare interface IWindowManager {
   create: (name: IWindowList) => BrowserWindow | null
   get: (name: IWindowList) => BrowserWindow | null
-  delete: (name: IWindowList) => void
+  // delete: (name: IWindowList) => void
+  deleteById: (id: number) => void
   getAvailableWindow: () => BrowserWindow
 }
